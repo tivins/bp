@@ -1,0 +1,23 @@
+{
+  "name": "bp",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc && npx rollup -c",
+    "dev_ts": "tsc -w",
+    "dev": "npx rollup -c --watch"
+  },
+  "keywords": [],
+  "author": "Tivins",
+  "license": "MIT",
+  "devDependencies": {
+    "@rollup/plugin-typescript": "^12.1.2",
+    "rollup": "^4.34.0",
+    "ts-node": "^10.9.2",
+    "tslib": "^2.8.1",
+    "typescript": "^5.7.3"
+  }
+}

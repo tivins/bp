@@ -1,6 +1,6 @@
 {
-  "name": "bp",
-  "version": "1.0.0",
+  "name": "@tivins/bp",
+  "version": "1.0.2",
   "description": "",
   "type": "module",
   "main": "src/index.js",
@@ -8,7 +8,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc && npx rollup -c",
     "dev_ts": "tsc -w",
-    "dev": "npx rollup -c --watch"
+    "dev": "npx rollup -c --watch",
+    "http": "node examples/http.js"
   },
   "keywords": [],
   "author": "Tivins",

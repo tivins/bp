@@ -1,16 +1,23 @@
 import {Canvas, Renderer} from "./Canvas.js";
-
-function makePoint(x: number, y: number) {
-    return {x: x, y: y};
-}
+import {Point} from "./Point";
 
 /**
- * @inheritDoc
+ *
+ *
+ * @example
+ * class CanvasMapExample extends CanvasMap {
+ *     renderFrame() {
+ *         super.renderFrame();
+ *         this.renderGrid(20, '#ccc', '#666')
+ *         this.dFillTextWorld(100, 100, "Test", 16, "#000", "Arial");
+ *     }
+ * }
+ * customElements.define('my-canvas-map-example', CanvasMapExample)
  */
 export class CanvasMap extends Canvas {
-    #targetOffset = makePoint(0, 0);
-    #offset = makePoint(0, 0);
-    #dragOrigin = makePoint(0, 0);
+    #targetOffset = new Point();
+    #offset = new Point();
+    #dragOrigin = new Point();
     #drag = false;
     #dragStarted = false;
     #zoom = 1.15
@@ -18,7 +25,7 @@ export class CanvasMap extends Canvas {
 
     constructor() {
         super();
-        // this.centerViewportCoord(makePoint(0, 0));
+        // this.centerViewportByCoordinate(makePoint(0, 0));
     }
 
     get offset() {
@@ -62,20 +69,20 @@ export class CanvasMap extends Canvas {
         window.removeEventListener('keyup', this.onKeyUp);
     }
 
-    centerViewportCoord(point: { x: number, y: number }) {
+    centerViewportByCoordinate(point: Point) {
         const size = this.canvasSize;
         const pt = this.ptScreenToWorld(point);
-        this.#targetOffset = makePoint(-pt.x + size.width / 2, -pt.y + size.height / 2);
+        this.#targetOffset = new Point(-pt.x + size.width / 2, -pt.y + size.height / 2);
     }
 
     // --------------------
 
-    ptWorldToScreen(pt: { x: number, y: number }) {
-        return makePoint(pt.x * this.#zoom + this.#offset.x, pt.y * this.#zoom + this.#offset.y);
+    ptWorldToScreen(pt: Point) {
+        return new Point(pt.x * this.#zoom + this.#offset.x, pt.y * this.#zoom + this.#offset.y);
     }
 
-    ptScreenToWorld(pt: { x: number, y: number }) {
-        return makePoint((pt.x - this.#offset.x) / this.#zoom, (pt.y - this.#offset.y) / this.#zoom);
+    ptScreenToWorld(pt: Point) {
+        return new Point((pt.x - this.#offset.x) / this.#zoom, (pt.y - this.#offset.y) / this.#zoom);
     }
 
     sizeWorldToScreen(sz: { width: number, height: number }) {
@@ -94,8 +101,8 @@ export class CanvasMap extends Canvas {
 
     getWorldViewport() {
         const rect = this.element.getBoundingClientRect();
-        const topLeftWorld = this.ptScreenToWorld(makePoint(rect.left, rect.top));
-        const bottomRightWorld = this.ptScreenToWorld(makePoint(rect.right, rect.bottom));
+        const topLeftWorld = this.ptScreenToWorld(new Point(rect.left, rect.top));
+        const bottomRightWorld = this.ptScreenToWorld(new Point(rect.right, rect.bottom));
         return {topLeft: topLeftWorld, bottomRight: bottomRightWorld};
     }
 
@@ -112,42 +119,33 @@ export class CanvasMap extends Canvas {
 
     onMouseWheel(e: WheelEvent) {
         e.preventDefault();
+        const zoomFactor = 1.15;
 
-        // Obtenons la position du canvas dans la page
         const rect = this.element.getBoundingClientRect();
-
-        // Calculer la position relative de la souris par rapport au canvas
-        const canvasMousePos = {
-            x: e.clientX - rect.left, y: e.clientY - rect.top
-        };
-
-        // Obtenir la position du curseur dans les coordonnées du monde avant le zoom
+        const canvasMousePos = new Point(e.clientX - rect.left, e.clientY - rect.top);
         const worldPosBeforeZoom = this.ptScreenToWorld(canvasMousePos);
 
-        const zoomFactor = 1.15;
         const isDown = e.deltaY > 0;
         this.#zoom *= isDown ? 1 / zoomFactor : zoomFactor;
         if (this.#zoom < 0.01) this.#zoom = 0.01;
         // if (this.#zoom > 50) this.#zoom = 50;
 
-        // Obtenir la position du curseur dans les coordonnées du monde après le zoom
         const worldPosAfterZoom = this.ptScreenToWorld(canvasMousePos);
 
-        // Ajuster l'offset pour maintenir le curseur sur la même position dans le monde
+        // Update offset to keep cursor on the same position in the world.
         this.#offset.x += (worldPosAfterZoom.x - worldPosBeforeZoom.x) * this.#zoom;
         this.#offset.y += (worldPosAfterZoom.y - worldPosBeforeZoom.y) * this.#zoom;
 
         // Update target offset
-        this.#targetOffset.x = this.#offset.x;
-        this.#targetOffset.y = this.#offset.y;
+        this.#targetOffset.fromCoordinate(this.#offset);
     }
 
     onMouseMove(e: MouseEvent) {
         if (this.#drag) {
             this.#offset.x += e.clientX - this.#dragOrigin.x;
             this.#offset.y += e.clientY - this.#dragOrigin.y;
-            this.#targetOffset = makePoint(this.#offset.x, this.#offset.y);
-            this.#dragOrigin = makePoint(e.clientX, e.clientY);
+            this.#targetOffset.fromCoordinate(this.#offset);
+            this.#dragOrigin.set(e.clientX, e.clientY);
             this.#dragStarted = true;
         }
     }
@@ -155,7 +153,7 @@ export class CanvasMap extends Canvas {
     onMouseDown(e: MouseEvent) {
         if (e.button === 0) {
             this.#drag = true;
-            this.#dragOrigin = makePoint(e.clientX, e.clientY);
+            this.#dragOrigin = new Point(e.clientX, e.clientY);
         }
         return undefined;
     }
@@ -185,14 +183,32 @@ export class CanvasMap extends Canvas {
     // ------------------------
     // draw
     // ------------------------
+    renderGrid(stepWorldSize = 20, linesColor = '#386093', linesColorHigh = '#4870a3') {
+
+        let stepScreenWidth = this.dimWorldToScreen(stepWorldSize);
+        if (stepScreenWidth > 50) stepWorldSize = 10;
+        if (stepScreenWidth < 10) stepWorldSize = 100;
+        if (stepScreenWidth < 5) stepWorldSize = 200;
+        if (stepScreenWidth < 3) stepWorldSize = 2000;
+        else if (stepScreenWidth < 1) stepWorldSize = 3000;
+        // console.debug("stepScreenWidth", stepScreenWidth)
+
+        let topLeftScreenWorld = this.ptScreenToWorld(new Point());
+        let bottomRightScreenWorld = this.ptScreenToWorld(new Point(this.element.width, this.element.height));
+        for (let y = (Math.floor(topLeftScreenWorld.y / stepWorldSize) * stepWorldSize); y < (Math.ceil(bottomRightScreenWorld.y / stepWorldSize) * stepWorldSize); y += stepWorldSize) {
+            this.dLineWorld(topLeftScreenWorld.x, y, bottomRightScreenWorld.x, y, y % 200 === 0 ? linesColorHigh : linesColor);
+        }
+        for (let x = (Math.floor(topLeftScreenWorld.x / stepWorldSize) * stepWorldSize); x < (Math.ceil(bottomRightScreenWorld.x / stepWorldSize) * stepWorldSize); x += stepWorldSize) {
+            this.dLineWorld(x, topLeftScreenWorld.y, x, bottomRightScreenWorld.y, x % 200 === 0 ? linesColorHigh : linesColor);
+        }
+    }
 
     dFillTextScreen(x: number, y: number, text: string, fontSize: number, fs: string, family = 'Source Sans 3') {
         this.ctx.font = `${fontSize.toFixed(5)}px "${family}"`;
         this.ctx.fillStyle = fs;
         const lines = text.split('\n');
-        const lineHeight = 12;
         lines.forEach((line, i) => {
-            this.ctx.fillText(line, x, y + lineHeight * i);
+            this.ctx.fillText(line, x, y + fontSize * i);
         })
     }
 
@@ -210,7 +226,7 @@ export class CanvasMap extends Canvas {
      * @param ss {string} Stroke style.
      * @param lineWidth {number} Line width in word coordinates.
      */
-    dLineWorld(x: number, y: number, x2: number, y2: number, ss: string, lineWidth = 1) {
+    dLineWorld(x: number, y: number, x2: number, y2: number, ss: string, lineWidth: number = 1) {
         const lineWidthScreen = this.dimWorldToScreen(lineWidth);
         this.ctx.beginPath();
         this.ctx.lineWidth = lineWidthScreen;
@@ -221,7 +237,7 @@ export class CanvasMap extends Canvas {
     }
 
     dFillRectWorld(x: number, y: number, w: number, h: number, fs: string, ss: string, blur: number) {
-        let ptScreen = this.ptWorldToScreen(makePoint(x, y));
+        let ptScreen = this.ptWorldToScreen(new Point(x, y));
         if (blur) {
             this.ctx.shadowBlur = blur;
             this.ctx.shadowColor = "#000";
@@ -233,7 +249,7 @@ export class CanvasMap extends Canvas {
     }
 
     dFillRoundRectWorld(x: number, y: number, w: number, h: number, fs: string, ss: string, blur: number, radius: number) {
-        let ptScreen = this.ptWorldToScreen(makePoint(x, y));
+        let ptScreen = this.ptWorldToScreen(new Point(x, y));
         if (blur) {
             this.ctx.shadowBlur = blur;
             this.ctx.shadowColor = "#000";
@@ -243,12 +259,12 @@ export class CanvasMap extends Canvas {
     }
 
     dTriangleWorld(x: number, y: number, r: number, fs: string, ss: string) {
-        let ptScreen = this.ptWorldToScreen(makePoint(x, y));
+        let ptScreen = this.ptWorldToScreen(new Point(x, y));
         Renderer.dTriangle(ptScreen.x, ptScreen.y, r, fs, ss)
     }
 
     // dCircleWorld(x, y, r, fs, ss) {
-    //     let ptScreen = this.ptWorldToScreen(makePoint(x, y));
+    //     let ptScreen = this.ptWorldToScreen(new Coordinate(x, y));
     //     Renderer.dTriangle(ptScreen.x, ptScreen.y, r, fs, ss)
     // }
 
@@ -279,4 +295,4 @@ export class CanvasMap extends Canvas {
 
 }
 
-customElements.define('tivins-canvas-map', CanvasMap)
+customElements.define('canvas-map', CanvasMap)

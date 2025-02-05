@@ -1,7 +1,7 @@
 import typescript from "@rollup/plugin-typescript";
 
 export default {
-    input: "examples/CanvasMapExample.ts",
+    input: "examples/IconExample.ts",
     watch: {
         include: ['src/**', 'examples/**'],
         exclude: 'node_modules/**'

@@ -1,5 +1,6 @@
 import {Canvas, Renderer} from "./Canvas.js";
 import {Point} from "./Point";
+import {BPColors} from "./BPColors";
 
 /**
  *
@@ -22,10 +23,13 @@ export class CanvasMap extends Canvas {
     #dragStarted = false;
     #zoom = 1.15
     #targetZoom = 1.15
+    colors: BPColors;
 
-    constructor() {
+    constructor(colors: BPColors) {
         super();
+        this.colors = colors;
         // this.centerViewportByCoordinate(makePoint(0, 0));
+        this.element.style.background = this.colors.background;
     }
 
     get offset() {
@@ -61,6 +65,8 @@ export class CanvasMap extends Canvas {
 
     disconnectedCallback() {
         super.disconnectedCallback();
+
+        // TODO does not remove the registered methods, because registered functions are anonymous ones.
         window.removeEventListener('mouseup', this.onMouseUp);
         this.element.removeEventListener('mousedown', this.onMouseDown);
         window.removeEventListener('mousemove', this.onMouseMove);
@@ -183,7 +189,7 @@ export class CanvasMap extends Canvas {
     // ------------------------
     // draw
     // ------------------------
-    renderGrid(stepWorldSize = 20, linesColor = '#386093', linesColorHigh = '#4870a3') {
+    renderGrid(stepWorldSize = 20) {
 
         let stepScreenWidth = this.dimWorldToScreen(stepWorldSize);
         if (stepScreenWidth > 50) stepWorldSize = 10;
@@ -196,10 +202,10 @@ export class CanvasMap extends Canvas {
         let topLeftScreenWorld = this.ptScreenToWorld(new Point());
         let bottomRightScreenWorld = this.ptScreenToWorld(new Point(this.element.width, this.element.height));
         for (let y = (Math.floor(topLeftScreenWorld.y / stepWorldSize) * stepWorldSize); y < (Math.ceil(bottomRightScreenWorld.y / stepWorldSize) * stepWorldSize); y += stepWorldSize) {
-            this.dLineWorld(topLeftScreenWorld.x, y, bottomRightScreenWorld.x, y, y % 200 === 0 ? linesColorHigh : linesColor);
+            this.dLineWorld(topLeftScreenWorld.x, y, bottomRightScreenWorld.x, y, y % 200 === 0 ? this.colors.linesColorHigh : this.colors.linesColor);
         }
         for (let x = (Math.floor(topLeftScreenWorld.x / stepWorldSize) * stepWorldSize); x < (Math.ceil(bottomRightScreenWorld.x / stepWorldSize) * stepWorldSize); x += stepWorldSize) {
-            this.dLineWorld(x, topLeftScreenWorld.y, x, bottomRightScreenWorld.y, x % 200 === 0 ? linesColorHigh : linesColor);
+            this.dLineWorld(x, topLeftScreenWorld.y, x, bottomRightScreenWorld.y, x % 200 === 0 ? this.colors.linesColorHigh : this.colors.linesColor);
         }
     }
 
@@ -248,7 +254,7 @@ export class CanvasMap extends Canvas {
         if (blur) this.ctx.shadowBlur = 0;
     }
 
-    dFillRoundRectWorld(x: number, y: number, w: number, h: number, fs: string, ss: string, blur: number, radius: number) {
+    dFillRoundRectWorld(x: number, y: number, w: number, h: number, fs: string, ss: string, blur: number, radius: number|number[]) {
         let ptScreen = this.ptWorldToScreen(new Point(x, y));
         if (blur) {
             this.ctx.shadowBlur = blur;
@@ -286,7 +292,9 @@ export class CanvasMap extends Canvas {
         const bounds = this.getWorldViewport();
 
         let y = 10;
-        this.dFillTextScreen(10, y, `Offset=${this.#targetOffset.x.toFixed(2)},${this.#targetOffset.y.toFixed(2)};` + `\nWorldView[${JSON.stringify(bounds)};` + `\nZoom=${this.#zoom.toFixed(2)}`, 12, '#069', 'consolas');
+        this.dFillTextScreen(10, y, `Offset=${this.#targetOffset.x.toFixed(2)},${this.#targetOffset.y.toFixed(2)};`
+            + `\nWorldView[${JSON.stringify(bounds)};`
+            + `\nZoom=${this.#zoom.toFixed(2)}`, 12, '#39c', 'consolas');
         lines.forEach(line => {
             y += 16;
             this.dFillTextScreen(10, y, line, 12, '#069', 'consolas');

@@ -1,7 +1,7 @@
 let globalUID = 1;
 
 export class UID {
-    uid = 0
+    protected uid = 0
 
     constructor() {
         this.uid = globalUID;

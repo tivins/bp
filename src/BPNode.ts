@@ -3,13 +3,15 @@ import {Blueprint} from "./Blueprint";
 import {CanvasBP} from "./CanvasBP";
 import {Point} from "./math/Point";
 import {Size} from "./math/Size";
+import {BPAnchorID} from "./BPAnchorID";
 
 export const BPAnchorSpace = 40;
 
 export class BPNode extends UID {
     node_id = "node";
     name = "Module Name";
-    private _position = new Point();
+    icon = "\uf126";
+    protected _position = new Point();
     size = new Size(200, 100);
     nodeColor = '#153'
     errors = []
@@ -17,6 +19,9 @@ export class BPNode extends UID {
 
     set position(pos: Point) {
         this._position.fromCoordinate(pos);
+    }
+    get position(): Point {
+        return this._position;
     }
 
     onUnlink(anchorID:BPAnchorID) {
@@ -53,7 +58,72 @@ export class BPNode extends UID {
         canvas.dFillRoundRectWorld(this.position.x, this.position.y, this.size.width, this.size.height, 'rgb(0, 0, 0, 40%)', ss, 15, radScreen)
         canvas.ctx.lineWidth = 1
         canvas.dFillRoundRectWorld(this.position.x, this.position.y, this.size.width, 30, this.nodeColor, '', 0, [radScreen, radScreen, 0, 0])
+
+        // todo
+        // @ts-ignore
+        this.renderAnchors(canvas, this.anchors['left'], 'left');
+        // @ts-ignore
+        this.renderAnchors(canvas, this.anchors['right'], 'right');
     }
+
+    renderAnchors(canvas:CanvasBP, anchors:{}, side:"left"|"right" = 'left') {
+        if (!anchors) return;
+        const isLeft = side === 'left';
+        const mainColor = isLeft ? "#08c" : '#696'
+        const font11HeightScreen = canvas.dimWorldToScreen(11);
+        canvas.ctx.textAlign = side;
+        let y = 45;
+        const radius = canvas.dimWorldToScreen(5);
+        for (let anchorName in anchors) {
+            if (anchorName.substring(0,1) === '_') {
+                y += BPAnchorSpace;
+                continue;
+            }
+
+            // todo
+            // @ts-ignore
+            const anchor = anchors[anchorName]
+            const anchorPos = this.getAnchorPos(side, anchorName);
+            if (!anchorPos) {
+                continue;
+            }
+
+            const x1 = isLeft ? (this.position.x + 10) : (this.position.x + this.size.width - 10);
+            if (font11HeightScreen > 4) canvas.dFillTextWorld(x1, this.position.y + y - 4, anchor.label, 13, mainColor);
+            if (font11HeightScreen > 8) canvas.dFillTextWorld(x1, this.position.y + y - 4 + 12, anchor.type, 11, "#666");
+
+            if (anchor.value !== undefined && font11HeightScreen > 6) {
+                canvas.dFillTextWorld(x1, this.position.y + y - 4 + 12 * 2, JSON.stringify(anchor.value), 11, "#fc0");
+            }
+            if (radius > 2) {
+                let index = canvas.blueprint.getLinksOf(new BPAnchorID(this, side, anchorName))
+                let fill = '#000'
+                let border = mainColor;
+                canvas.ctx.lineWidth = canvas.dimWorldToScreen(1);
+                if (index > -1 ||
+                    (canvas.overAnchor && canvas.overAnchor.node === this && canvas.overAnchor.side === side && canvas.overAnchor.name === anchorName) ||
+                    (canvas.createLinkAnchor && canvas.createLinkAnchor.node === this && canvas.createLinkAnchor.side === side && canvas.createLinkAnchor.name === anchorName)) {
+                    //canvas.ctx.shadowBlur = canvas.dimWorldToScreen(5);
+                    //canvas.ctx.shadowColor = '#fff';
+                    fill = mainColor
+                    // border = 'black'
+                    // canvas.ctx.lineWidth = canvas.dimWorldToScreen(2);
+                }
+
+
+                if (anchor.type === 'branch') {
+                    canvas.dTriangleWorld(anchorPos.x, anchorPos.y, radius, fill, border)
+                } else {
+                    canvas.dCircleWorld(anchorPos.x, anchorPos.y, 5, fill, border)
+                }
+
+                canvas.ctx.lineWidth = 1;
+                canvas.ctx.shadowBlur = 0;
+            }
+            y += BPAnchorSpace;
+        }
+    }
+
 
     isValid(canvas:CanvasBP) {
         return this.errors.length === 0;
@@ -63,30 +133,3 @@ export class BPNode extends UID {
     }
 }
 
-export class BPAnchorID {
-    node: BPNode;
-    side;
-    name;
-
-    constructor(node: BPNode, side: string, name: string) {
-        this.node = node;
-        this.side = side;
-        this.name = name;
-    }
-
-    get object() {
-        // todo
-        // @ts-ignore
-        return this.node.anchors[this.side][this.name]
-    }
-}
-
-export class BPAnchorLink {
-    a: BPAnchorID;
-    b: BPAnchorID;
-
-    constructor(a: BPAnchorID, b: BPAnchorID) {
-        this.a = a;
-        this.b = b;
-    }
-}

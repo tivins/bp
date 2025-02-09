@@ -8,7 +8,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc && npx rollup -c",
     "dev_ts": "tsc -w",
-    "dev": "npx rollup -c --watch",
+    "dev_rollup": "npx rollup -c --watch",
     "http": "node examples/http.js"
   },
   "keywords": [],

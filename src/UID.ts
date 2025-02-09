@@ -1,17 +1,21 @@
 let globalUID = 1;
 
 export class UID {
-    protected uid = 0
+    protected _uid = 0
 
     constructor() {
-        this.uid = globalUID;
+        this._uid = globalUID;
         globalUID++;
     }
 
+    get uid() {
+        return this._uid;
+    }
+
     forceUID(uid: number) {
-        this.uid = uid;
-        if (globalUID < this.uid) {
-            globalUID = this.uid + 1;
+        this._uid = uid;
+        if (globalUID < this._uid) {
+            globalUID = this._uid + 1;
         }
     }
 

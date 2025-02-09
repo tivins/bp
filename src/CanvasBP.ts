@@ -1,18 +1,20 @@
 import {CanvasMap} from "./CanvasMap";
 import {Blueprint} from "./Blueprint";
-import {BPAnchorID, BPNode} from "./BPNode";
-import {Point} from "./Point";
+import {BPNode} from "./BPNode";
 import {Toasts} from "./components/Toasts";
 import {Geom} from "./math/Geom";
 import {BPColors} from "./BPColors";
 import {ContextMenu} from "./ContextMenu";
+import {Point} from "./math/Point";
+import {BPAnchorID} from "./BPAnchorID";
+import {BPAnchorLink} from "./BPAnchorLink";
 
 
 export class CanvasBP extends CanvasMap {
-    private blueprint: Blueprint;
+    blueprint: Blueprint;
     private overNode: BPNode | null = null;
-    private overAnchor: BPAnchorID | null = null;
-    dragElementOrigin = {};
+    overAnchor: BPAnchorID | null = null;
+    dragElementOrigin = new Point();
     dragElement = false;
     createLinkAnchor: BPAnchorID | null = null;
     selectedNodes: BPNode[] = [];
@@ -40,7 +42,7 @@ export class CanvasBP extends CanvasMap {
 
 
         const style = document.createElement('style');
-        style.textContent = '@import "/front/theme/main.css';
+        // style.textContent = '@import "/front/theme/main.css';
         if (this.shadowRoot) {
             this.shadowRoot.append(this.ctxContainer);
             this.shadowRoot.append(style);
@@ -64,10 +66,6 @@ export class CanvasBP extends CanvasMap {
         const bounds = this.blueprint.getBounds();
         this.centerViewportPoint(new Point(bounds.x1 + (bounds.x2 - bounds.x1) * .5, bounds.y1 + (bounds.y2 - bounds.y1) * .5))
     }
-
-    // renderGrid() {
-    //     super.renderGrid(20, this.colors.linesColor, this.colors.linesColorHigh);
-    // }
 
     renderBounds() {
         const bounds = this.blueprint.getBounds();
@@ -224,10 +222,7 @@ export class CanvasBP extends CanvasMap {
         super.onContextMenu(e);
 
         const rect = this.element.getBoundingClientRect();
-        const pt = this.ptScreenToWorld(new Point(
-            e.clientX - rect.left,
-            e.clientY - rect.top
-        ))
+
         const menu = ContextMenu.getInstance();
         menu.menuElement.innerHTML = '';
         if (this.overAnchor) {
@@ -240,16 +235,145 @@ export class CanvasBP extends CanvasMap {
             // menu.addItem(`Add output value`, () => {});
             menu.addItem(`Delete node "${this.overNode.name}#${this.overNode.uid}"`, () => this.deleteNode(a));
         } else {
-            this.getContextElements().forEach((el) => {
-
-                // menu.addItem('Entry point', () => this.addNode(BPNodeAI_Entry, pt));
-            })
+            const elements = this.getContextElements();
+            if (elements.length > 0) {
+                const pt = this.ptScreenToWorld(new Point(
+                    e.clientX - rect.left,
+                    e.clientY - rect.top
+                ))
+                elements.forEach((el) => {
+                    menu.addItem(el.label,  () => this.addNode(el.callback(), pt));
+                });
+            }
         }
         menu.show(e.pageX, e.pageY);
     }
 
-    getContextElements(): Object[] {
+    addNode(node: BPNode, pos: Point) {
+        this.blueprint.addNode(node, pos);
+    }
+
+    /**
+     * Must be overridden.
+     */
+    getContextElements(): BPContextItem[] {
         return [];
+    }
+
+    onMouseUp(e:MouseEvent):undefined {
+        // @ts-ignore
+        const isOnCanvas = e['explicitOriginalTarget'] === this.element;
+        let was_drag = this.dragStarted;
+
+        super.onMouseUp(e);
+        this.dragElement = false;
+
+        if (this.createLinkAnchor && this.overAnchor && this.validateLinking(true)) {
+            this.onNodeLinked(this.blueprint.link(this.createLinkAnchor, this.overAnchor));
+        }
+        this.createLinkAnchor = null;
+        if (isOnCanvas) {
+            if (this.overNode) {
+                this.selectedNodes = [this.overNode];
+                // TODO this.showNodeForm(this.overNode);
+            } else if (!was_drag) {
+                this.selectedNodes = [];
+                this.ctxContainer.innerHTML = '';
+            }
+        }
+    }
+    onNodeLinked(link:BPAnchorLink) {
+        if (link.a.object.type === 'any') {
+            link.a.object.type = link.b.object.type;
+        }
+        if (link.b.object.type === 'any') {
+            link.b.object.type = link.a.object.type;
+        }
+    }
+
+    onMouseMove(e:MouseEvent) {
+        super.onMouseMove(e);
+        const rect = this.element.getBoundingClientRect();
+        this.mousePosition.set(
+            e.clientX - rect.left,
+            e.clientY - rect.top
+        )
+
+        if (this.dragElement && this.overNode) {
+            this.overNode.position.x += this.dimScreenToWorld(e.clientX - this.dragElementOrigin.x);
+            this.overNode.position.y += this.dimScreenToWorld(e.clientY - this.dragElementOrigin.y);
+            this.dragElementOrigin.set(e.clientX, e.clientY);
+            return;
+        }
+
+        const mouseWorldPos = this.ptScreenToWorld(this.mousePosition);
+        this.overNode = null;
+        this.overAnchor = null;
+        for (let i = 0; i < this.blueprint.nodes.length; i++) {
+            const node = this.blueprint.nodes[i];
+            if (mouseWorldPos.x > node.position.x - 10 &&
+                mouseWorldPos.x < node.position.x + node.size.width + 10 &&
+                mouseWorldPos.y > node.position.y - 10 &&
+                mouseWorldPos.y < node.position.y + node.size.height + 10
+            ) {
+                if (mouseWorldPos.x > node.position.x &&
+                    mouseWorldPos.x < node.position.x + node.size.width &&
+                    mouseWorldPos.y > node.position.y &&
+                    mouseWorldPos.y < node.position.y + node.size.height
+                ) {
+                    this.overNode = node;
+                }
+                ['left', 'right'].forEach(side => {
+                    // @ts-ignore
+                    for (let anchorName in node.anchors[side]) {
+                        if (anchorName.substring(0, 1) === '_') {
+                            continue;
+                        }
+                        const anchorPos = node.getAnchorPos(side, anchorName)
+                        if (anchorPos &&
+                            mouseWorldPos.x > anchorPos.x - 10 &&
+                            mouseWorldPos.x < anchorPos.x + 10 &&
+                            mouseWorldPos.y > anchorPos.y - 10 &&
+                            mouseWorldPos.y < anchorPos.y + 10
+                        ) {
+                            this.overNode = node;
+                            this.overAnchor = new BPAnchorID(node, side, anchorName);
+                        }
+                    }
+                });
+            }
+        }
+        this.element.style.cursor = (this.overAnchor || this.overNode) ? (this.overAnchor ? (this.createLinkAnchor ? (this.validateLinking() ? 'cell' : 'not-allowed') : 'crosshair') : 'move') : 'default';
+
+    }
+
+    onMouseDown(e:MouseEvent): undefined {
+        let catchDrag = false;
+        if (e.button === 0) {
+            if (this.overAnchor) {
+                this.createLinkAnchor = this.overAnchor;
+                catchDrag = true;
+            } else if (this.overNode) {
+                catchDrag = true;
+                this.dragElementOrigin = new Point(e.clientX, e.clientY);
+                this.dragElement = true;
+            }
+        }
+        if (!catchDrag) super.onMouseDown(e)
+    }
+    onDblClick(e:MouseEvent) {
+        super.onDblClick(e);
+        if (this.overNode) {
+            this.centerViewport(this.overNode)
+        }
+    }
+}
+export class BPContextItem {
+    public label: string;
+    public callback: Function;
+    constructor(label: string, callback: Function) {
+        this.label = label;
+        this.callback = callback;
     }
 }
 customElements.define('tivins-canvas-bp', CanvasBP);

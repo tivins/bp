@@ -1,5 +1,5 @@
-import {Canvas, Renderer} from "./Canvas.js";
-import {Point} from "./Point";
+import {Canvas, Renderer} from "./Canvas";
+import {Point} from "./math/Point";
 import {BPColors} from "./BPColors";
 
 /**

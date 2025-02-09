@@ -1,6 +1,8 @@
-import {BPAnchorID, BPAnchorLink, BPNode} from "./BPNode";
-import {Point} from "./Point";
-import {Bounds} from "./Bounds";
+import {BPNode} from "./BPNode";
+import {Point} from "./math/Point";
+import {Bounds} from "./math/Bounds";
+import {BPAnchorID} from "./BPAnchorID";
+import {BPAnchorLink} from "./BPAnchorLink";
 
 export class Blueprint {
     id = 0;

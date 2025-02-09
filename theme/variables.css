@@ -1,0 +1,27 @@
+@import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,200..900;1,200..900&display=swap');
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css');
+
+:root {
+    --font: "Source Sans 3";
+    --background-color: #202224; /*#2c2d2f*/
+    --primary-text-color: #ccc;
+    --secondary-text-color: #A0A0A0;
+    --primary-accent-color: #6A8CAF;
+    --secondary-accent-color: #fc0;
+    --element-background-color: #2A2A3C;
+    --border-color: rgb(255,255,255,10%);
+    --error-color: #FF5370;
+    --success-color: #C3E88D;
+
+    --radius: 3px;
+    --radius-2: 6px;
+
+    --index-side-menu: 2;
+    --index-modal-background: 3;
+    --index-modal: 4;
+    --index-toast: 5;
+}
+
+.bg-black-20 {background: rgb(0,0,0,.2)}
+.bg-black-50 {background: rgb(0,0,0,.5)}
+.bg-black-75 {background: rgb(0,0,0,.75)}

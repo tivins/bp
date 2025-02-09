@@ -5,7 +5,7 @@ Awesome blueprints and components for the web.
 Repository: https://github.com/tivins/bp
 <br>Package: https://www.npmjs.com/package/@tivins/bp
 
-![overview.gif](docs/files/overview2.gif)
+![overview.gif](docs/files/overview3.gif)
 
 ## Install
 

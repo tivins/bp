@@ -13,7 +13,7 @@ export class Anchor {
     value: any;
     editable: boolean
 
-    constructor(label: string, type: string, value: any = null, editable = false) {
+    constructor(label: string, type: string, value: any = undefined, editable = false) {
         this.label = label;
         this.type = type;
         this.value = value;
@@ -36,7 +36,7 @@ export class BPNode extends UID {
     protected _position = new Point();
     size = new Size(200, 100);
     nodeColor = '#153'
-    errors = []
+    errors:string[] = []
     anchors: Nodes = {};
 
     set position(pos: Point) {

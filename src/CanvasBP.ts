@@ -249,6 +249,12 @@ export class CanvasBP extends CanvasMap {
         menu.show(e.pageX, e.pageY);
     }
 
+    // Todo
+    async loadNode(nodeName: string, path: string) {
+        const {classNode} = await import(path);
+        console.log(classNode);
+    }
+
     addNode(node: BPNode, pos: Point) {
         this.blueprint.addNode(node, pos);
     }
@@ -361,6 +367,7 @@ export class CanvasBP extends CanvasMap {
         }
         if (!catchDrag) super.onMouseDown(e)
     }
+
     onDblClick(e:MouseEvent) {
         super.onDblClick(e);
         if (this.overNode) {
@@ -376,4 +383,5 @@ export class BPContextItem {
         this.callback = callback;
     }
 }
+
 customElements.define('tivins-canvas-bp', CanvasBP);

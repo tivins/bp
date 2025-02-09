@@ -1,7 +1,7 @@
 import {createServer} from "http";
 import {readFile, writeFile} from "fs/promises";
 import {existsSync} from "fs";
-import {join} from "path";
+import {extname,join} from "path";
 import {fileURLToPath} from "url";
 
 const __dirname = fileURLToPath(new URL("..", import.meta.url));
@@ -46,7 +46,7 @@ const server = createServer(async (req, res) => {
         /*
          * Send existing file
          */
-        if (existsSync(requestedFile)) {
+        if (existsSync(requestedFile) && extname(requestedFile)) {
             await serveFile(requestedFile);
             return;
         }

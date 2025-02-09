@@ -1,4 +1,4 @@
-import {Anchor, BPNode} from "../../../src/BPNode";
+import {Anchor, BPNode, BPSide} from "../../../src/BPNode";
 import {BPTypes} from "../BPTypes";
 import {Blueprint} from "../../../src/Blueprint";
 import {BPAnchorID} from "../../../src/BPAnchorID";
@@ -24,7 +24,7 @@ export class EndNode extends BPNode {
 
     checkValidity(blueprint: Blueprint) {
         super.checkValidity(blueprint);
-        if (blueprint.getLinksOf(new BPAnchorID(this, 'left', 'in')) === -1) {
+        if (blueprint.getLinksOf(new BPAnchorID(this, BPSide.left, 'in')) === -1) {
             this.errors.push("'in' is not linked")
         }
     }

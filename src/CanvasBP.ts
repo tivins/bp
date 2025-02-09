@@ -8,6 +8,8 @@ import {ContextMenu} from "./ContextMenu";
 import {Point} from "./math/Point";
 import {BPAnchorID} from "./BPAnchorID";
 import {BPAnchorLink} from "./BPAnchorLink";
+import {BPTypes} from "../examples/bpProgram/BPTypes";
+import {DOMUtil} from "./DOMUtil";
 
 
 export class CanvasBP extends CanvasMap {
@@ -281,13 +283,84 @@ export class CanvasBP extends CanvasMap {
         if (isOnCanvas) {
             if (this.overNode) {
                 this.selectedNodes = [this.overNode];
-                // TODO this.showNodeForm(this.overNode);
+                this.showNodeForm(this.overNode);
             } else if (!was_drag) {
                 this.selectedNodes = [];
                 this.ctxContainer.innerHTML = '';
             }
         }
     }
+
+    showNodeForm(node:BPNode) {
+        this.ctxContainer.innerHTML = '';
+        for (let side in node.anchors) {
+            for (let name in node.anchors[side]) {
+                const anchor = node.anchors[side][name];
+                if (anchor.type === BPTypes.branch) {
+                    continue;
+                }
+                if (!anchor.editable) {
+                    continue;
+                }
+
+                const index_link = this.blueprint.getLinksOf(new BPAnchorID(node, side, name));
+                const link = index_link > -1 ? this.blueprint.links[index_link] : null;
+                const remote_anchor = link ? (link.a.node === node ? link.b : link.a) : null;
+                const type_is_nullable = anchor.type.substring(0, 1) === '?';
+                const final_value = remote_anchor ? remote_anchor.object.value : (anchor.value ?? '');
+                const is_linked = side === 'left' && index_link > -1;
+
+                const wrap = DOMUtil.element('div', {
+                    className: `flex p-05 flex-align ${is_linked || !anchor.editable ? `disabled muted` : ''}`
+                });
+                const label = DOMUtil.element('div', {className: 'pr-1 text-sm', textContent: anchor.label});
+                label.style.width = "200px";
+
+                // -- nullCheck
+                const nullCheck = DOMUtil.element('input', {type: "checkbox"}) as HTMLInputElement;
+                nullCheck.checked = anchor.value === null;
+                nullCheck.style.display = type_is_nullable ? '' : 'none';
+                nullCheck.addEventListener('change', e => {
+                    input.style.display = nullCheck.checked ? 'none' : '';
+                });
+
+                // -- Input
+                const input = DOMUtil.element('input', {}) as HTMLInputElement;
+                switch (anchor.type) {
+                    case BPTypes.float:
+                        input.pattern = "[0-9]*\.[0-9]*";
+                        input.value = final_value;
+                        break;
+                    case BPTypes.int:
+                        input.pattern = "[1-9][0-9]*"
+                        input.value = final_value;
+                        break;
+                    case BPTypes.image:
+                        input.type = 'file';
+                        break;
+                    default:
+                        input.value = final_value;
+                }
+                if (!is_linked) input.required = true;
+                input.style.padding = '2px 5px';
+                if (anchor.value === null) input.style.display = 'none';
+                const onChange =  (e:Event|null) => {
+                    if (anchor.type === BPTypes.int) {
+                        anchor.value = parseInt(input.value)
+                    } else {
+                        anchor.value = input.value
+                    }
+                }
+                input.addEventListener('change', (e:Event) => onChange(e));
+                onChange(null);
+
+                // -- add to DOM
+                wrap.append(label, nullCheck, input)
+                this.ctxContainer.append(wrap)
+            }
+        }
+    }
+
     onNodeLinked(link:BPAnchorLink) {
         if (link.a.object.type === 'any') {
             link.a.object.type = link.b.object.type;

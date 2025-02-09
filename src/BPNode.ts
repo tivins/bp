@@ -7,13 +7,18 @@ import {BPAnchorID} from "./BPAnchorID";
 
 export const BPAnchorSpace = 40;
 
+export const BPSide = {
+    left: "left",
+    right: "right"
+}
+
 export class Anchor {
     label: string;
     type: string;
     value: any;
     editable: boolean
 
-    constructor(label: string, type: string, value: any = undefined, editable = false) {
+    constructor(label: string, type: string, value: any = undefined, editable = true) {
         this.label = label;
         this.type = type;
         this.value = value;

@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.style.margin = '0';
 
     Toasts.instance.addToastDefault("<tivins-icon icon='lightbulb' outline></tivins-icon> Use RMB to create a new node.", 0)
-    Toasts.instance.addToastDefault("BP Program Example.");
+    Toasts.instance.addToastDefault("BP Program Example 😊", 2);
 
     const canvas = new CanvasBPProgramExample(new Blueprint(), new BPColors());
     document.body.append(canvas);

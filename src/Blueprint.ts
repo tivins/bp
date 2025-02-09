@@ -8,7 +8,7 @@ export class Blueprint {
     id = 0;
     nodes: BPNode[] = [];
     links: BPAnchorLink[] = [];
-    errors = [];
+    errors: string[] = [];
 
     addNode(obj: BPNode, pos: Point) {
         obj.position = pos;

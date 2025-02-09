@@ -355,7 +355,7 @@ export class CanvasBP extends CanvasMap {
                 catchDrag = true;
             } else if (this.overNode) {
                 catchDrag = true;
-                this.dragElementOrigin = new Point(e.clientX, e.clientY);
+                this.dragElementOrigin.set(e.clientX, e.clientY);
                 this.dragElement = true;
             }
         }

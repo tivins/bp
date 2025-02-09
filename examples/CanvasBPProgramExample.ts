@@ -16,7 +16,7 @@ export const BPTypes = {
 }
 class NopNode extends BPNode {
     node_id = "nop";
-    name = "Nop";
+    name = "Nopss";
     size = new Size(250,250);
     anchors:Nodes = {
         left: {

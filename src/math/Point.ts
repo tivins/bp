@@ -2,14 +2,16 @@ export class Point {
     x: number;
     y: number;
 
-    constructor(x: number = 0, y: number = 0) {
-        this.x = x;
-        this.y = y;
+    constructor(x: number|Point = 0, y: number = 0) {
+        if (x instanceof Point) {
+            this.x = x.x;
+            this.y = x.y;
+        } else {
+            this.x = x;
+            this.y = y;
+        }
     }
 
-    static fromCoordinate(coordinate: Point): Point {
-        return new Point(coordinate.x, coordinate.y);
-    }
     fromCoordinate(coordinate: Point): this {
         this.x = coordinate.x;
         this.y = coordinate.y;

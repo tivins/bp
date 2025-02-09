@@ -7,6 +7,28 @@ import {BPAnchorID} from "./BPAnchorID";
 
 export const BPAnchorSpace = 40;
 
+export class Anchor {
+    label: string;
+    type: string;
+    value: any;
+    editable: boolean
+
+    constructor(label: string, type: string, value: any = null, editable = false) {
+        this.label = label;
+        this.type = type;
+        this.value = value;
+        this.editable = editable;
+    }
+}
+
+
+export interface Nodes {
+    [side: string]: {
+        [name: string]: Anchor;
+    };
+}
+
+
 export class BPNode extends UID {
     node_id = "node";
     name = "Module Name";
@@ -15,43 +37,40 @@ export class BPNode extends UID {
     size = new Size(200, 100);
     nodeColor = '#153'
     errors = []
-    anchors = {};
+    anchors: Nodes = {};
 
     set position(pos: Point) {
         this._position.fromCoordinate(pos);
     }
+
     get position(): Point {
         return this._position;
     }
 
-    onUnlink(anchorID:BPAnchorID) {
+    onUnlink(anchorID: BPAnchorID) {
     }
 
-    onLink(anchorID:BPAnchorID) {
+    onLink(anchorID: BPAnchorID) {
     }
-    getAnchorPos(side:string, name:string) {
+
+    getAnchorPos(side: string, name: string) {
         let y = 45;
-        // @ts-ignore
         for (let n in this.anchors[side]) {
             if (n === name) {
-                return new Point(
-                    this.position.x + (side === 'right' ? this.size.width : 0),
-                    this.position.y + y
-                );
+                return new Point(this.position.x + (side === 'right' ? this.size.width : 0), this.position.y + y);
             }
             y += BPAnchorSpace;
         }
         return null;
     }
+
     toJSON() {
         return {
-            id: this.uid,
-            node_id: this.node_id,
-            pos: this._position,
+            id: this.uid, node_id: this.node_id, pos: this._position,
         }
     }
 
-    render(canvas:CanvasBP) {
+    render(canvas: CanvasBP) {
         const ss = canvas.selectedNodes.indexOf(this) !== -1 ? '#fff' : this.nodeColor; // canvas.overNode === this ? this.nodeColor : null
         const radScreen = canvas.dimWorldToScreen(5)
         canvas.ctx.lineWidth = canvas.dimWorldToScreen(1)
@@ -59,14 +78,25 @@ export class BPNode extends UID {
         canvas.ctx.lineWidth = 1
         canvas.dFillRoundRectWorld(this.position.x, this.position.y, this.size.width, 30, this.nodeColor, '', 0, [radScreen, radScreen, 0, 0])
 
-        // todo
-        // @ts-ignore
+        //----------------
+
+        canvas.ctx.textBaseline = 'hanging'
+        canvas.ctx.shadowBlur = 2;
+        canvas.ctx.shadowOffsetY = 1;
+        canvas.ctx.textAlign = 'center'
+        canvas.dFillTextWorld(this.position.x + 15, this.position.y + 10, this.icon, 16, "rgb(255,255,255,50%)", "FontAwesome")
+        canvas.ctx.textAlign = 'left'
+        canvas.dFillTextWorld(this.position.x + 35, this.position.y + 10, this.name, 16, "#ccc")
+        canvas.dFillTextWorld(this.position.x - 10, this.position.y - 10, '#' + this.uid, 11, "#ccc")
+        canvas.ctx.shadowBlur = 0;
+        canvas.ctx.shadowOffsetY = 0;
+
+
         this.renderAnchors(canvas, this.anchors['left'], 'left');
-        // @ts-ignore
         this.renderAnchors(canvas, this.anchors['right'], 'right');
     }
 
-    renderAnchors(canvas:CanvasBP, anchors:{}, side:"left"|"right" = 'left') {
+    renderAnchors(canvas: CanvasBP, anchors: Record<string, Anchor>, side: "left" | "right" = 'left') {
         if (!anchors) return;
         const isLeft = side === 'left';
         const mainColor = isLeft ? "#08c" : '#696'
@@ -75,13 +105,11 @@ export class BPNode extends UID {
         let y = 45;
         const radius = canvas.dimWorldToScreen(5);
         for (let anchorName in anchors) {
-            if (anchorName.substring(0,1) === '_') {
+            if (anchorName.substring(0, 1) === '_') {
                 y += BPAnchorSpace;
                 continue;
             }
 
-            // todo
-            // @ts-ignore
             const anchor = anchors[anchorName]
             const anchorPos = this.getAnchorPos(side, anchorName);
             if (!anchorPos) {
@@ -100,9 +128,7 @@ export class BPNode extends UID {
                 let fill = '#000'
                 let border = mainColor;
                 canvas.ctx.lineWidth = canvas.dimWorldToScreen(1);
-                if (index > -1 ||
-                    (canvas.overAnchor && canvas.overAnchor.node === this && canvas.overAnchor.side === side && canvas.overAnchor.name === anchorName) ||
-                    (canvas.createLinkAnchor && canvas.createLinkAnchor.node === this && canvas.createLinkAnchor.side === side && canvas.createLinkAnchor.name === anchorName)) {
+                if (index > -1 || (canvas.overAnchor && canvas.overAnchor.node === this && canvas.overAnchor.side === side && canvas.overAnchor.name === anchorName) || (canvas.createLinkAnchor && canvas.createLinkAnchor.node === this && canvas.createLinkAnchor.side === side && canvas.createLinkAnchor.name === anchorName)) {
                     //canvas.ctx.shadowBlur = canvas.dimWorldToScreen(5);
                     //canvas.ctx.shadowColor = '#fff';
                     fill = mainColor
@@ -125,7 +151,7 @@ export class BPNode extends UID {
     }
 
 
-    isValid(canvas:CanvasBP) {
+    isValid(canvas: CanvasBP) {
         return this.errors.length === 0;
     }
 

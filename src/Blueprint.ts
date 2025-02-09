@@ -87,7 +87,8 @@ export class Blueprint {
         if (this.nodes.length === 0) {
             return new Bounds();
         }
-        const worldBounds = new Bounds(999999, 999999, -999999, -999999);
+        const worldBounds = new Bounds(999999, 999999, -999999, -999999); // TODO
+
         this.nodes.forEach(node => {
             if (worldBounds.x1 > node.position.x) worldBounds.x1 = node.position.x;
             if (worldBounds.y1 > node.position.y) worldBounds.y1 = node.position.y;

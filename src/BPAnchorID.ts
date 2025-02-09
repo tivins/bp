@@ -12,8 +12,6 @@ export class BPAnchorID {
     }
 
     get object() {
-        // todo
-        // @ts-ignore
         return this.node.anchors[this.side][this.name]
     }
 }

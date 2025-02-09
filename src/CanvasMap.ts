@@ -78,7 +78,7 @@ export class CanvasMap extends Canvas {
     centerViewportByCoordinate(point: Point) {
         const size = this.canvasSize;
         const pt = this.ptScreenToWorld(point);
-        this.#targetOffset = new Point(-pt.x + size.width / 2, -pt.y + size.height / 2);
+        this.#targetOffset.set(-pt.x + size.width / 2, -pt.y + size.height / 2);
     }
 
     // --------------------

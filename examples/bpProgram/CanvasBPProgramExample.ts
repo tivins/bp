@@ -7,6 +7,8 @@ import {PrintNode} from "./nodes/PrintNode";
 import {EntryNode} from "./nodes/EntryNode";
 import {EndNode} from "./nodes/EndNode";
 import {ConstNode} from "./nodes/ConstNode";
+import {IfNode} from "./nodes/IfNode";
+import {CompareNode} from "./nodes/CompareNode";
 
 class CanvasBPProgramExample extends CanvasBP {
     getContextElements(): BPContextItem[] {
@@ -16,6 +18,8 @@ class CanvasBPProgramExample extends CanvasBP {
         elements.push(new BPContextItem("EntryNode", () => new EntryNode()));
         elements.push(new BPContextItem("EndNode", () => new EndNode()));
         elements.push(new BPContextItem("ConstNode", () => new ConstNode()));
+        elements.push(new BPContextItem("IfNode", () => new IfNode()));
+        elements.push(new BPContextItem("CompareNode", () => new CompareNode()));
         return elements;
     }
 }

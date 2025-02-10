@@ -196,8 +196,8 @@ export class CanvasMap extends Canvas {
         if (stepScreenWidth < 10) stepWorldSize = 100;
         if (stepScreenWidth < 5) stepWorldSize = 200;
         if (stepScreenWidth < 3) stepWorldSize = 2000;
-        else if (stepScreenWidth < 1) stepWorldSize = 3000;
-        // console.debug("stepScreenWidth", stepScreenWidth)
+        else if (stepScreenWidth < 1) return;
+
 
         let topLeftScreenWorld = this.ptScreenToWorld(new Point());
         let bottomRightScreenWorld = this.ptScreenToWorld(new Point(this.element.width, this.element.height));

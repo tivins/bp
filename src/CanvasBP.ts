@@ -269,8 +269,7 @@ export class CanvasBP extends CanvasMap {
     }
 
     onMouseUp(e:MouseEvent):undefined {
-        // @ts-ignore
-        const isOnCanvas = e['explicitOriginalTarget'] === this.element;
+        const isOnCanvas = e.composedPath().includes(this.element);
         let was_drag = this.dragStarted;
 
         super.onMouseUp(e);

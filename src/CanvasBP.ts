@@ -12,6 +12,16 @@ import {BPTypes} from "../examples/bpProgram/BPTypes";
 import {DOMUtil} from "./DOMUtil";
 
 
+export class BPContextItem {
+    public label: string;
+    public callback: () => BPNode;
+    constructor(label: string, callback: () => BPNode) {
+        this.label = label;
+        this.callback = callback;
+    }
+}
+
+
 export class CanvasBP extends CanvasMap {
     blueprint: Blueprint;
     private overNode: BPNode | null = null;
@@ -447,13 +457,4 @@ export class CanvasBP extends CanvasMap {
         }
     }
 }
-export class BPContextItem {
-    public label: string;
-    public callback: Function;
-    constructor(label: string, callback: Function) {
-        this.label = label;
-        this.callback = callback;
-    }
-}
-
 customElements.define('tivins-canvas-bp', CanvasBP);

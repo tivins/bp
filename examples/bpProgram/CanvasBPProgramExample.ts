@@ -9,6 +9,7 @@ import {EndNode} from "./nodes/EndNode";
 import {ConstNode} from "./nodes/ConstNode";
 import {IfNode} from "./nodes/IfNode";
 import {CompareNode} from "./nodes/CompareNode";
+import {FlipFlopNode} from "./nodes/FlipFlopNode";
 
 class CanvasBPProgramExample extends CanvasBP {
     getContextElements(): BPContextItem[] {
@@ -20,6 +21,7 @@ class CanvasBPProgramExample extends CanvasBP {
         elements.push(new BPContextItem("ConstNode", () => new ConstNode()));
         elements.push(new BPContextItem("IfNode", () => new IfNode()));
         elements.push(new BPContextItem("CompareNode", () => new CompareNode()));
+        elements.push(new BPContextItem("FlipFlopNode", () => new FlipFlopNode()));
         return elements;
     }
 }

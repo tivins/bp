@@ -7,10 +7,14 @@ import {BPAnchorID} from "./BPAnchorID";
 
 export const BPAnchorSpace = 40;
 
-export const BPSide = {
-    left: "left",
-    right: "right"
+export class Side {
 }
+export class BPSide extends Side {
+    static left =  "left";
+    static right = "right"
+}
+
+
 
 export class Anchor {
     label: string;
@@ -58,11 +62,14 @@ export class BPNode extends UID {
     onLink(anchorID: BPAnchorID) {
     }
 
+    /**
+     * To be overridden when you have to use a new BPSide.
+     */
     getAnchorPos(side: string, name: string) {
-        let y = 45;
+        let y = 45; // TODO ie offsetY
         for (let n in this.anchors[side]) {
             if (n === name) {
-                return new Point(this.position.x + (side === 'right' ? this.size.width : 0), this.position.y + y);
+                return new Point(this.position.x + (side === BPSide.right ? this.size.width : 0), this.position.y + y);
             }
             y += BPAnchorSpace;
         }

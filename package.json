@@ -1,14 +1,13 @@
 {
   "name": "@tivins/bp",
   "version": "1.0.4",
-  "description": "",
+  "description": "Awesome blueprints and components for the web.",
   "type": "module",
   "main": "src/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsc && npx rollup -c",
+    "build": "tsc && npm run css",
     "dev_ts": "tsc -w",
-    "dev_rollup": "npx rollup -c --watch",
     "http": "node examples/http.js",
     "css": "cleancss -o dist/theme.css theme/main.css"
   },
@@ -17,9 +16,7 @@
   "license": "MIT",
   "devDependencies": {
     "@rollup/plugin-typescript": "^12.1.2",
-    "clean-css": "^5.3.3",
     "clean-css-cli": "^5.6.3",
-    "rollup": "^4.34.0",
     "ts-node": "^10.9.2",
     "tslib": "^2.8.1",
     "typescript": "^5.7.3"

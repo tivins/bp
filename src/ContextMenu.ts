@@ -1,7 +1,7 @@
 
 export class ContextMenu extends HTMLElement {
     menuElement: Element;
-    private inputElement: HTMLInputElement | null;
+    private readonly inputElement: HTMLInputElement | null;
     constructor() {
         super();
         const shadow = this.attachShadow({ mode: 'closed' });

@@ -1,5 +1,4 @@
 import {CanvasMap} from "../src/CanvasMap";
-import {API} from "../src/API";
 import {BPColors} from "../src/BPColors";
 
 export class CanvasMapExample extends CanvasMap {

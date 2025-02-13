@@ -8,7 +8,7 @@ import {ContextMenu} from "./ContextMenu";
 import {Point} from "./math/Point";
 import {BPAnchorID} from "./BPAnchorID";
 import {BPAnchorLink} from "./BPAnchorLink";
-import {BPTypes} from "../examples/bpProgram/BPTypes";
+import {BPTypes} from "../examples/bpProgram/BPTypes"; // TODO Remove that!
 import {DOMUtil} from "./DOMUtil";
 
 

@@ -10,6 +10,10 @@ import {ConstNode} from "./nodes/ConstNode";
 import {IfNode} from "./nodes/IfNode";
 import {CompareNode} from "./nodes/CompareNode";
 import {FlipFlopNode} from "./nodes/FlipFlopNode";
+import {Anchor, BPNode} from "../../src/BPNode";
+import {BPTypes} from "./BPTypes";
+import {BPAnchorID} from "../../src/BPAnchorID";
+import {DOMUtil} from "../../src/DOMUtil";
 
 class CanvasBPProgramExample extends CanvasBP {
     getContextElements(): BPContextItem[] {
@@ -27,7 +31,6 @@ class CanvasBPProgramExample extends CanvasBP {
 
     /**
      * Override the validation when a link is created.
-     * @param emitToasts
      */
     validateLinking(emitToasts = false) {
         if (!super.validateLinking(emitToasts)) {
@@ -86,6 +89,71 @@ class CanvasBPProgramExample extends CanvasBP {
 
         return true;
     }
+    showFormField(node:BPNode,anchor:Anchor,side:string,name:string) {
+
+        if (!anchor.editable) {
+            return;
+        }
+        if (anchor.type === BPTypes.branch) {
+            return;
+        }
+
+        const index_link = this.blueprint.getLinksOf(new BPAnchorID(node, side, name));
+        const link = index_link > -1 ? this.blueprint.links[index_link] : null;
+        const remote_anchor = link ? (link.a.node === node ? link.b : link.a) : null;
+        const type_is_nullable = anchor.type.substring(0, 1) === '?';
+        const final_value = remote_anchor ? remote_anchor.object.value : (anchor.value ?? '');
+        const is_linked = side === 'left' && index_link > -1;
+
+        const wrap = DOMUtil.element('div', {
+            className: `flex p-05 flex-align ${is_linked || !anchor.editable ? `disabled muted` : ''}`
+        });
+        const label = DOMUtil.element('div', {className: 'pr-1 text-sm', textContent: anchor.label});
+        label.style.width = "200px";
+
+        // -- nullCheck
+        const nullCheck = DOMUtil.element('input', {type: "checkbox"}) as HTMLInputElement;
+        nullCheck.checked = anchor.value === null;
+        nullCheck.style.display = type_is_nullable ? '' : 'none';
+        nullCheck.addEventListener('change', e => {
+            input.style.display = nullCheck.checked ? 'none' : '';
+        });
+
+        // -- Input
+        const input = DOMUtil.element('input', {}) as HTMLInputElement;
+        switch (anchor.type) {
+            case BPTypes.float:
+                input.pattern = "[0-9]*\.[0-9]*";
+                input.value = final_value;
+                break;
+            case BPTypes.int:
+                input.pattern = "[1-9][0-9]*"
+                input.value = final_value;
+                break;
+            case BPTypes.image:
+                input.type = 'file';
+                break;
+            default:
+                input.value = final_value;
+        }
+        if (!is_linked) input.required = true;
+        input.style.padding = '2px 5px';
+        if (anchor.value === null) input.style.display = 'none';
+        const onChange =  (e:Event|null) => {
+            if (anchor.type === BPTypes.int) {
+                anchor.value = parseInt(input.value)
+            } else {
+                anchor.value = input.value
+            }
+        }
+        input.addEventListener('change', (e:Event) => onChange(e));
+        onChange(null);
+
+        // -- add to DOM
+        wrap.append(label, nullCheck, input)
+        this.ctxContainer.append(wrap)
+    }
+
 }
 customElements.define('canvas-bp-program-example', CanvasBPProgramExample);
 

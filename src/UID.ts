@@ -20,6 +20,6 @@ export class UID {
     }
 
     static reset() {
-        globalUID = 0;
+        globalUID = 1;
     }
 }

@@ -112,7 +112,7 @@ export class Canvas extends HTMLElement {
         }
         const newWidth = this.canvas.offsetWidth;
         const newHeight = window.innerHeight;
-        // Redimensionner seulement si nécessaire
+        // Resize only if necessary
         if (this.canvas.width !== newWidth || this.canvas.height !== newHeight) {
             this.canvas.width = newWidth;
             this.canvas.height = newHeight;

@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BP Test Page</title>
+  <script type="module" src="../dist/src/CanvasBP.js"></script>
+  <script type="module" src="../dist/src/Blueprint.js"></script>
+  <script type="module" src="../dist/src/BPColors.js"></script>
+  <script type="module" src="../dist/src/components/Toasts.js"></script>
+  <script type="module" src="../dist/src/BPNode.js"></script>
+  <script type="module" src="../dist/src/math/Size.js"></script>
+  <script type="module" src="../dist/src/math/Point.js"></script>
+  <script type="module" src="../dist/src/math/Geom.js"></script>
+  <script type="module" src="../dist/src/math/Bounds.js"></script>
+  <script type="module" src="../dist/src/CanvasMap.js"></script>
+  <script type="module" src="../dist/src/Canvas.js"></script>
+  <script type="module" src="../dist/src/ContextMenu.js"></script>
+  <script type="module" src="../dist/src/BPAnchorID.js"></script>
+  <script type="module" src="../dist/src/BPAnchorLink.js"></script>
+  <script type="module" src="../dist/src/DOMUtil.js"></script>
+  <script type="module" src="../dist/src/UID.js"></script>
+  <link rel="stylesheet" href="../dist/theme.css">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+    }
+    #test-info {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 10px;
+      border-radius: 5px;
+      font-family: monospace;
+      font-size: 12px;
+      z-index: 1000;
+      max-width: 300px;
+    }
+    #test-controls {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 10px;
+      border-radius: 5px;
+      z-index: 1000;
+    }
+    button {
+      background: #007acc;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      margin: 2px;
+      border-radius: 3px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #005a9e;
+    }
+  </style>
+</head>
+<body>
+  <div id="test-info">
+    <div>Test Mode: Active</div>
+    <div id="node-count">Nodes: 0</div>
+    <div id="link-count">Links: 0</div>
+    <div id="selected-nodes">Selected: 0</div>
+  </div>
+  
+  <div id="test-controls">
+    <button id="add-nop">Add Nop Node</button>
+    <button id="clear-all">Clear All</button>
+    <button id="center-view">Center View</button>
+    <button id="validate-bp">Validate BP</button>
+  </div>
+
+  <script type="module">
+    import {BPContextItem, CanvasBP} from "../dist/src/CanvasBP.js";
+    import {Blueprint} from "../dist/src/Blueprint.js";
+    import {BPColors} from "../dist/src/BPColors.js";
+    import {Toasts} from "../dist/src/components/Toasts.js";
+    import {Anchor, BPNode, Nodes} from "../dist/src/BPNode.js";
+    import {Size} from "../dist/src/math/Size.js";
+
+    // Test node class
+    class TestNode extends BPNode {
+      node_id = "test-node";
+      name = "Test Node";
+      size = new Size(200, 100);
+      anchors = {
+        left: {
+          in: new Anchor("Input", "string"),
+        },
+        right: {
+          out: new Anchor("Output", "string"),
+        }
+      };
+    }
+
+    class TestCanvasBP extends CanvasBP {
+      getContextElements() {
+        const elements = super.getContextElements();
+        elements.push(new BPContextItem("Test Node", () => new TestNode()));
+        return elements;
+      }
+    }
+
+    // Initialize the canvas
+    const canvas = new TestCanvasBP(new Blueprint(), new BPColors());
+    document.body.appendChild(canvas);
+    canvas.resize();
+    canvas.center();
+    canvas.run();
+
+    // Test controls
+    let nodeCount = 0;
+    let linkCount = 0;
+
+    function updateInfo() {
+      nodeCount = canvas.blueprint.nodes.length;
+      linkCount = canvas.blueprint.links.length;
+      document.getElementById('node-count').textContent = `Nodes: ${nodeCount}`;
+      document.getElementById('link-count').textContent = `Links: ${linkCount}`;
+      document.getElementById('selected-nodes').textContent = `Selected: ${canvas.selectedNodes.length}`;
+    }
+
+    // Add event listeners
+    document.getElementById('add-nop').addEventListener('click', () => {
+      const testNode = new TestNode();
+      canvas.addNode(testNode, { x: 100 + nodeCount * 50, y: 100 + nodeCount * 50 });
+      updateInfo();
+    });
+
+    document.getElementById('clear-all').addEventListener('click', () => {
+      canvas.blueprint.nodes = [];
+      canvas.blueprint.links = [];
+      canvas.selectedNodes = [];
+      updateInfo();
+    });
+
+    document.getElementById('center-view').addEventListener('click', () => {
+      canvas.center();
+    });
+
+    document.getElementById('validate-bp').addEventListener('click', () => {
+      const isValid = canvas.blueprint.isValid();
+      Toasts.instance.addToastDefault(isValid ? "Blueprint is valid!" : "Blueprint is invalid", 3);
+    });
+
+    // Update info periodically
+    setInterval(updateInfo, 1000);
+    updateInfo();
+
+    // Make canvas globally available for tests
+    window.testCanvas = canvas;
+    window.testUtils = {
+      addNode: (type = 'test') => {
+        const node = type === 'test' ? new TestNode() : new TestNode();
+        canvas.addNode(node, { x: Math.random() * 400 + 100, y: Math.random() * 300 + 100 });
+        updateInfo();
+        return node;
+      },
+      getNodeCount: () => canvas.blueprint.nodes.length,
+      getLinkCount: () => canvas.blueprint.links.length,
+      clearAll: () => {
+        canvas.blueprint.nodes = [];
+        canvas.blueprint.links = [];
+        canvas.selectedNodes = [];
+        updateInfo();
+      },
+      getSelectedNodes: () => canvas.selectedNodes,
+      centerView: () => canvas.center(),
+      validateBlueprint: () => canvas.blueprint.isValid()
+    };
+  </script>
+</body>
+</html>

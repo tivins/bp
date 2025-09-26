@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simple BP Test</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+    }
+    #canvas-container {
+      width: 800px;
+      height: 600px;
+      border: 2px solid #ccc;
+      position: relative;
+      background: #f0f0f0;
+    }
+    #test-info {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 10px;
+      border-radius: 5px;
+      font-family: monospace;
+      font-size: 12px;
+      z-index: 1000;
+    }
+    #test-controls {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 10px;
+      border-radius: 5px;
+      z-index: 1000;
+    }
+    button {
+      background: #007acc;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      margin: 2px;
+      border-radius: 3px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #005a9e;
+    }
+    .node {
+      position: absolute;
+      width: 100px;
+      height: 60px;
+      background: #4CAF50;
+      border: 2px solid #45a049;
+      border-radius: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      cursor: move;
+    }
+    .node.selected {
+      border-color: #ff6b6b;
+      box-shadow: 0 0 10px rgba(255, 107, 107, 0.5);
+    }
+  </style>
+</head>
+<body>
+  <div id="test-info">
+    <div>Test Mode: Active</div>
+    <div id="node-count">Nodes: 0</div>
+    <div id="link-count">Links: 0</div>
+    <div id="selected-nodes">Selected: 0</div>
+  </div>
+  
+  <div id="test-controls">
+    <button id="add-node">Add Node</button>
+    <button id="clear-all">Clear All</button>
+    <button id="center-view">Center View</button>
+    <button id="validate-bp">Validate BP</button>
+  </div>
+
+  <h1>BP Test Application</h1>
+  <p>This is a simplified test version of the BP application.</p>
+  
+  <div id="canvas-container">
+    <div id="canvas-content">
+      <p style="text-align: center; margin-top: 250px; color: #666;">
+        Click "Add Node" to create nodes, or right-click in the canvas area.
+      </p>
+    </div>
+  </div>
+
+  <script>
+    let nodeCount = 0;
+    let linkCount = 0;
+    let selectedNodes = [];
+    let nodeId = 0;
+
+    function updateInfo() {
+      document.getElementById('node-count').textContent = `Nodes: ${nodeCount}`;
+      document.getElementById('link-count').textContent = `Links: ${linkCount}`;
+      document.getElementById('selected-nodes').textContent = `Selected: ${selectedNodes.length}`;
+    }
+
+    function addNode() {
+      nodeId++;
+      const node = document.createElement('div');
+      node.className = 'node';
+      node.id = `node-${nodeId}`;
+      node.textContent = `Node ${nodeId}`;
+      
+      // Random position
+      const x = Math.random() * 600 + 50;
+      const y = Math.random() * 400 + 50;
+      node.style.left = x + 'px';
+      node.style.top = y + 'px';
+      
+      // Event listeners
+      node.addEventListener('click', (e) => {
+        e.stopPropagation();
+        selectNode(node);
+      });
+      
+      node.addEventListener('mousedown', (e) => {
+        if (e.button === 0) { // Left click
+          startDrag(node, e);
+        }
+      });
+      
+      document.getElementById('canvas-content').appendChild(node);
+      nodeCount++;
+      updateInfo();
+    }
+
+    function selectNode(node) {
+      // Clear previous selection
+      selectedNodes.forEach(n => n.classList.remove('selected'));
+      selectedNodes = [node];
+      node.classList.add('selected');
+      updateInfo();
+    }
+
+    function clearAll() {
+      const nodes = document.querySelectorAll('.node');
+      nodes.forEach(node => node.remove());
+      nodeCount = 0;
+      linkCount = 0;
+      selectedNodes = [];
+      updateInfo();
+    }
+
+    function centerView() {
+      // Simple center view implementation
+      const container = document.getElementById('canvas-container');
+      container.scrollLeft = container.scrollWidth / 2 - container.clientWidth / 2;
+      container.scrollTop = container.scrollHeight / 2 - container.clientHeight / 2;
+    }
+
+    function validateBP() {
+      const isValid = nodeCount >= 0; // Simple validation
+      alert(isValid ? 'Blueprint is valid!' : 'Blueprint is invalid!');
+    }
+
+    function startDrag(node, e) {
+      const startX = e.clientX - node.offsetLeft;
+      const startY = e.clientY - node.offsetTop;
+      
+      function onMouseMove(e) {
+        node.style.left = (e.clientX - startX) + 'px';
+        node.style.top = (e.clientY - startY) + 'px';
+      }
+      
+      function onMouseUp() {
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+      }
+      
+      document.addEventListener('mousemove', onMouseMove);
+      document.addEventListener('mouseup', onMouseUp);
+    }
+
+    // Event listeners
+    document.getElementById('add-node').addEventListener('click', addNode);
+    document.getElementById('clear-all').addEventListener('click', clearAll);
+    document.getElementById('center-view').addEventListener('click', centerView);
+    document.getElementById('validate-bp').addEventListener('click', validateBP);
+
+    // Right-click context menu
+    document.getElementById('canvas-container').addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      addNode();
+    });
+
+    // Click to deselect
+    document.getElementById('canvas-container').addEventListener('click', (e) => {
+      if (e.target === document.getElementById('canvas-container') || e.target === document.getElementById('canvas-content')) {
+        selectedNodes.forEach(n => n.classList.remove('selected'));
+        selectedNodes = [];
+        updateInfo();
+      }
+    });
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Delete' && selectedNodes.length > 0) {
+        selectedNodes.forEach(node => {
+          node.remove();
+          nodeCount--;
+        });
+        selectedNodes = [];
+        updateInfo();
+      }
+    });
+
+    // Initialize
+    updateInfo();
+
+    // Make functions globally available for tests
+    window.testUtils = {
+      addNode,
+      clearAll,
+      centerView,
+      validateBP,
+      getNodeCount: () => nodeCount,
+      getLinkCount: () => linkCount,
+      getSelectedNodes: () => selectedNodes,
+      selectNode
+    };
+  </script>
+</body>
+</html>

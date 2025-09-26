@@ -129,3 +129,8 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# custom files
+reviews/review001.md
+.last-run.json
+playwright-report/index.html

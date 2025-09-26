@@ -92,7 +92,7 @@ export class ContextMenu extends HTMLElement {
         this.menuElement?.append(document.createElement('hr'))
     }
 
-    // Affiche le menu à la position donnée (x, y)
+    // Display menu at given position (x, y)
     show(x:number, y:number) {
         if (!this.inputElement) {
             return;
